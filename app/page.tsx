@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useCart } from './context/CartContext';
 
 type CoffeeItem = {
   id: number;
@@ -19,11 +19,9 @@ const coffeeMenu: CoffeeItem[] = [
 ];
 
 export default function Home() {
-  const [cart, setCart] = useState<CoffeeItem[]>([]);
+  const { cart, addToCart, updateQuantity, getItemQuantity } = useCart();
 
-  const addToCart = (item: CoffeeItem) => {
-    setCart([...cart, item]);
-  };
+  const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="min-h-screen bg-amber-50 p-8">
@@ -35,7 +33,7 @@ export default function Home() {
             href="/cart" 
             className="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition"
           >
-            Cart ({cart.length})
+            Cart ({totalItems})
           </Link>
         </div>
       </header>
@@ -43,21 +41,44 @@ export default function Home() {
       <main className="max-w-6xl mx-auto">
         <h2 className="text-2xl font-semibold text-amber-900 mb-6">Our Menu</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {coffeeMenu.map((item) => (
-            <div key={item.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
-              <h3 className="text-xl font-semibold text-amber-900 mb-2">{item.name}</h3>
-              <p className="text-gray-600 mb-4">{item.description}</p>
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-bold text-amber-700">${item.price.toFixed(2)}</span>
-                <button
-                  onClick={() => addToCart(item)}
-                  className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 transition"
-                >
-                  Add to Cart
-                </button>
+          {coffeeMenu.map((item) => {
+            const quantity = getItemQuantity(item.id);
+            
+            return (
+              <div key={item.id} className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+                <h3 className="text-xl font-semibold text-amber-900 mb-2">{item.name}</h3>
+                <p className="text-gray-600 mb-4">{item.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-2xl font-bold text-amber-700">${item.price.toFixed(2)}</span>
+                  
+                  {quantity === 0 ? (
+                    <button
+                      onClick={() => addToCart(item)}
+                      className="bg-amber-600 text-white px-4 py-2 rounded hover:bg-amber-700 transition"
+                    >
+                      Add to Cart
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => updateQuantity(item.id, quantity - 1)}
+                        className="bg-amber-600 text-white w-8 h-8 rounded hover:bg-amber-700 transition"
+                      >
+                        -
+                      </button>
+                      <span className="text-lg font-semibold w-8 text-center">{quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, quantity + 1)}
+                        className="bg-amber-600 text-white w-8 h-8 rounded hover:bg-amber-700 transition"
+                      >
+                        +
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </main>
     </div>
